@@ -32,53 +32,60 @@ export const userEnrolledCourses = async (req, res) => {
 
 //purchase course
 export const purchaseCourse = async (req, res) => {
-     try {
-        const {courseId} = req.body;
-        const userId = req.auth.userId;
-        const {origin} = req.headers;
-        const userData = await User.findById(userId);
-        const courseData = await Course.findById(courseId);
+
+    try {
+
+        const { courseId } = req.body
+        const { origin } = req.headers
+
+
+        const userId = req.auth.userId
+
+        const courseData = await Course.findById(courseId)
+        const userData = await User.findById(userId)
+
         if (!userData || !courseData) {
-            return res.json({ success: false, message: 'Data not found' });
+            return res.json({ success: false, message: 'Data Not Found' })
         }
-        // Implement payment processing logic here
+
         const purchaseData = {
-          courseId: courseData._id,
-          userId,
-          amount : (courseData.price - courseData.discount * courseData.price / 100).toFixed(2),
-
+            courseId: courseData._id,
+            userId,
+            amount: (courseData.coursePrice - courseData.discount * courseData.coursePrice / 100).toFixed(2),
         }
-        const newPurchase = await Purchase.create(purchaseData);
+        
+        const newPurchase = await Purchase.create(purchaseData)
 
-        //stripe gateway initialization
-        const stripeInstance = new Stripe(process.env.STRIPE_SECRET_KEY);
-             const currency = process.env.CURRENCY;
-        ;//create line items for stripe
-        const line_items = [
-            {
-                price_data: {
-                    currency,
-                    product_data: {
-                        name: courseData.courseTitle,
-                        description: courseData.description,
-                    },
-                    unit_amount: Math.floor(newPurchase.amount * 100),
+        // Stripe Gateway Initialize
+        const stripeInstance = new Stripe(process.env.STRIPE_SECRET_KEY)
+
+        const currency = process.env.CURRENCY.toLocaleLowerCase()
+
+        // Creating line items to for Stripe
+        const line_items = [{
+            price_data: {
+                currency,
+                product_data: {
+                    name: courseData.courseTitle
                 },
-                quantity: 1,
+                unit_amount: Math.floor(newPurchase.amount) * 100
             },
-        ];
+            quantity: 1
+        }]
+
         const session = await stripeInstance.checkout.sessions.create({
-            payment_method_types: ['card'],
-            line_items,
-            mode: 'payment',
             success_url: `${origin}/loading/my-enrollments`,
             cancel_url: `${origin}/`,
+            line_items: line_items,
+            mode: 'payment',
             metadata: {
-                 purchaseCourseId: newPurchase._id.toString(),
+                purchaseId: newPurchase._id.toString()
             }
-        });
+        })
 
         res.json({ success: true, session_url: session.url });
+
+
     } catch (error) {
         res.json({ success: false, message: error.message });
     }
