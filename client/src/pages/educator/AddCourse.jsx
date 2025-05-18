@@ -90,24 +90,25 @@ const AddCourse = () => {
     if (editorRef.current && !quillRef.current) {
       // Initialize Quill editor
       quillRef.current = new Quill(editorRef.current, {
-        theme: 'snow',
-        modules: {
-          toolbar: [
-            [{ header: [1, 2, false] }],
-            ['bold', 'italic', 'underline', 'strike'],
-            [{ list: 'ordered' }, { list: 'bullet' }],
-            ['link', 'image'],
-            ['clean']
-          ]
-        },
-        placeholder: 'Write course description here...',
-        formats: [
-          'header',
-          'bold', 'italic', 'underline', 'strike',
-          'list', 'bullet',
-          'link', 'image'
-        ]
-      });
+  theme: 'snow',
+  modules: {
+    toolbar: [
+      [{ header: [1, 2, false] }],
+      ['bold', 'italic', 'underline', 'strike'],
+      [{ list: 'ordered' }, { list: 'bullet' }],
+      ['link', 'image'],
+      ['clean']
+    ]
+  },
+  placeholder: 'Write course description here...',
+  formats: [
+    'header',
+    'bold', 'italic', 'underline', 'strike',
+    'list',  // Changed from 'list', 'bullet' to just 'list'
+    'link', 'image'
+  ]
+});
+
     }
 
     // Cleanup function
@@ -194,7 +195,8 @@ const AddCourse = () => {
             <label htmlFor="thumbnailImage" className='flex items-center gap-3 '>
               <img src={assets.file_upload_icon} className='p-3 bg-blue-500 rounded' alt="" />
               <input type="file" name="" id="thumbnailImage" onChange={e => setImage(e.target.files[0])}  accept='image/*' hidden/>
-              <img src={image ? URL.createObjectURL(image) : ''} alt="" className='max-h-10'/>
+              {image && <img src={URL.createObjectURL(image)} alt="" className='max-h-10'/>}
+
             </label>
           </div>
         </div>

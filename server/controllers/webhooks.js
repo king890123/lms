@@ -1,8 +1,9 @@
 import { Webhook } from "svix";
 import User from "../models/User.js";
 import Stripe from "stripe";
-import Purchase from "../models/Purchase.js";
+import {Purchase} from "../models/Purchase.js";
 import Course from "../models/Course.js";
+
 
 //API controller function to manage clerk user with database
 
@@ -14,23 +15,25 @@ export const clerkWebhooks = async (req,res)=>{
         "svix-timestamp": req.headers["svix-timestamp"],
         "svix-signature": req.headers["svix-signature"],
       });
-      const { type, data } = req.body;
+      const { data,type } = req.body;
       switch (type) {
         case "user.created":{
             const userData ={
                 _id: data.id,
-                name: data.first_name + " " + data.last_name,
                 email: data.email_addresses[0].email_address,
+                name: data.first_name + " " + data.last_name,
                 imageUrl: data.image_url,
             }
-            await User.create(userData);
+            const users = await User.create(userData);
+            users.save();
+
             res.json({})
             break;
         }
         case "user.updated":{
             const userData ={
-                name: data.first_name + " " + data.last_name,
                 email: data.email_addresses[0].email_address,
+                name: data.first_name + " " + data.last_name,
                 imageUrl: data.image_url,
             }
             await User.findByIdAndUpdate(data.id, userData);
